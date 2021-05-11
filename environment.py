@@ -27,7 +27,7 @@ def take_step(name, env, agent, score, debug):
       agent.model.save_weights('recent_weights.hdf5')
       print('\nWeights saved!')
 
-    #3: Take action
+    #3: Take action, the action is the last planned action for the last state
     next_frame, next_frames_reward, next_frame_terminal, info = env.step(agent.memory.actions[-1])
     
     #4: Get next state
@@ -36,7 +36,7 @@ def take_step(name, env, agent, score, debug):
     new_state = np.moveaxis(new_state,0,2)/255 #We have to do this to get it into keras's goofy format of [batch_size,rows,columns,channels]
     new_state = np.expand_dims(new_state,0) #^^^
     
-    #5: Get next action, using next state
+    #5: Get next action, using next state (based on current epsilon)
     next_action = agent.get_action(new_state)
 
     #6: If game is over, return the score

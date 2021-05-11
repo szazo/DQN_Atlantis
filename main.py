@@ -1,3 +1,5 @@
+import os
+import tensorflow as tf
 import the_agent
 import environment
 import matplotlib.pyplot as plt
@@ -5,7 +7,17 @@ import time
 from collections import deque
 import numpy as np
 
-name = 'PongDeterministic-v4'
+GPU_ENABLED = True
+if not GPU_ENABLED:
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+else:
+    gpu_devices = tf.config.experimental.list_physical_devices('GPU')
+    for device in gpu_devices:
+        tf.config.experimental.set_memory_growth(device, True)
+    
+tf.config.threading.set_inter_op_parallelism_threads(16)
+
+name = 'Atlantis-v0'
 
 agent = the_agent.Agent(possible_actions=[0,2,3],starting_mem_len=50000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
 env = environment.make_env(name,agent)
@@ -37,7 +49,10 @@ for i in range(1000000):
     print('Max Score: ' + str(max_score))
     print('Epsilon: ' + str(agent.epsilon))
 
-    if i%100==0 and i!=0:
+    if i%10==0 and i!=0:
         last_100_avg.append(sum(scores)/len(scores))
-        plt.plot(np.arange(0,i+1,100),last_100_avg)
-        plt.show()
+        plt.plot(np.arange(0,i+1,10),last_100_avg)
+        plt.xlabel('Episode')
+        plt.ylabel('Last 10 episode\'s average score')
+        plt.savefig('fig_cpu_{}'.format(i))
+        # plt.show()

@@ -1,12 +1,11 @@
 from tensorflow.keras.models import Sequential, clone_model
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, Input
 from tensorflow.keras.optimizers import Adam
-import keras.backend as K
+import tensorflow.keras.backend as K
 import tensorflow as tf
 from agent_memory import Memory
 import numpy as np
 import random
-
 
 class Agent():
     def __init__(self,possible_actions,starting_mem_len,max_mem_len,starting_epsilon,learn_rate, starting_lives = 5, debug = False):

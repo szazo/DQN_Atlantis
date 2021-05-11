@@ -16,8 +16,12 @@ import numpy as np
 
 
 def resize_frame(frame):
-    frame = frame[30:-12,5:-4]
+    frame = frame[0:-40]
     frame = np.average(frame,axis = 2)
-    frame = cv2.resize(frame,(84,84),interpolation = cv2.INTER_NEAREST)
-    frame = np.array(frame,dtype = np.uint8)
-    return frame
+    
+    target = np.zeros((170, 170)) # zero padding
+    target[:,5:-5] = frame
+
+    target = cv2.resize(target,(84,84),interpolation = cv2.INTER_NEAREST)
+    target = np.array(target,dtype = np.uint8)
+    return target
