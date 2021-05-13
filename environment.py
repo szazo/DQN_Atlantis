@@ -19,12 +19,12 @@ def make_env(name, agent):
     env = gym.make(name)
     return env
 
-def take_step(name, env, agent, score, debug):
+def take_step(name, experiment, env, agent, score, debug):
     
     #1 and 2: Update timesteps and save weights
     agent.total_timesteps += 1
     if agent.total_timesteps % 50000 == 0:
-      agent.model.save_weights('recent_weights.hdf5')
+      agent.model.save_weights('recent_weights_{}_{}.hdf5'.format(experiment, agent.total_timesteps))
       print('\nWeights saved!')
 
     #3: Take action, the action is the last planned action for the last state
@@ -57,12 +57,12 @@ def take_step(name, env, agent, score, debug):
 
     return (score + next_frames_reward),False
 
-def play_episode(name, env, agent, debug = False):
+def play_episode(name, experiment, env, agent, debug = False):
     initialize_new_game(name, env, agent)
     done = False
     score = 0
     while True:
-        score,done = take_step(name,env,agent,score, debug)
+        score,done = take_step(name, experiment, env,agent,score, debug)
         if done:
             break
     return score

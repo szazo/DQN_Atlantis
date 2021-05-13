@@ -7,7 +7,7 @@ import time
 from collections import deque
 import numpy as np
 
-GPU_ENABLED = True
+GPU_ENABLED = False
 if not GPU_ENABLED:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 else:
@@ -15,29 +15,31 @@ else:
     for device in gpu_devices:
         tf.config.experimental.set_memory_growth(device, True)
     
-tf.config.threading.set_inter_op_parallelism_threads(16)
+tf.config.threading.set_inter_op_parallelism_threads(8)
 
 name = 'Atlantis-v0'
 
-agent = the_agent.Agent(possible_actions=[0,2,3],starting_mem_len=50000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
+agent = the_agent.Agent(possible_actions=[0,1,2,3],starting_mem_len=100000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
 env = environment.make_env(name,agent)
 
 last_100_avg = [-21]
 scores = deque(maxlen = 100)
 max_score = -21
 
-""" If testing:
-agent.model.load_weights('recent_weights.hdf5')
-agent.model_target.load_weights('recent_weights.hdf5')
-agent.epsilon = 0.0
-"""
+# # If testing:
+# agent.model.load_weights('recent_weights.hdf5')
+# agent.model_target.load_weights('recent_weights.hdf5')
+# agent.epsilon = 0.0
+
 
 env.reset()
+
+experiment = 'all_actions_alpha_0_00025_deepmind'
 
 for i in range(1000000):
     timesteps = agent.total_timesteps
     timee = time.time()
-    score = environment.play_episode(name, env, agent, debug = False) #set debug to true for rendering
+    score = environment.play_episode(name, experiment, env, agent, debug = False) #set debug to true for rendering
     scores.append(score)
     if score > max_score:
         max_score = score
@@ -53,6 +55,6 @@ for i in range(1000000):
         last_100_avg.append(sum(scores)/len(scores))
         plt.plot(np.arange(0,i+1,10),last_100_avg)
         plt.xlabel('Episode')
-        plt.ylabel('Last 10 episode\'s average score')
-        plt.savefig('fig_cpu_{}'.format(i))
+        plt.ylabel('Last 100 episode\'s average score')
+        plt.savefig('fig_{}{}'.format(experiment, i))
         # plt.show()

@@ -1,5 +1,5 @@
 from tensorflow.keras.models import Sequential, clone_model
-from tensorflow.keras.layers import Dense, Flatten, Conv2D, Input
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, Input, Dropout
 from tensorflow.keras.optimizers import Adam
 import tensorflow.keras.backend as K
 import tensorflow as tf
@@ -26,12 +26,16 @@ class Agent():
 
     def _build_model(self):
         model = Sequential()
-        model.add(Input((84,84,4)))
-        model.add(Conv2D(filters = 32,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-        model.add(Conv2D(filters = 64,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-        model.add(Conv2D(filters = 64,kernel_size = (3,3),strides = 1,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
+        model.add(Input((180,160,4)))
+        model.add(Conv2D(filters = 16,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
+        model.add(Conv2D(filters = 32,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
+        # model.add(Conv2D(filters = 24,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
+        # model.add(Conv2D(filters = 36,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
+        # model.add(Conv2D(filters = 36,kernel_size = (3,3),strides = 1,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
         model.add(Flatten())
-        model.add(Dense(512,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
+        # model.add(Dense(512,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
+        model.add(Dense(256,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
+        # model.add(Dropout(0.2)) # Dropout layer, randomly drops 0.2 of the input values
         model.add(Dense(len(self.possible_actions), activation = 'linear'))
         optimizer = Adam(self.learn_rate)
         model.compile(optimizer, loss=tf.keras.losses.Huber())

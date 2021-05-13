@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 name = 'PongDeterministic-v4'
+experiment = 'debug'
 
-agent = the_agent.Agent(possible_actions=[0,2,3],starting_mem_len=50,max_mem_len=750000, starting_epsilon = .5, debug = True)
+agent = the_agent.Agent(possible_actions=[0,1,2,3],starting_mem_len=50,max_mem_len=750000, starting_epsilon = .5, debug = True)
 env = environment.make_env(name,agent)
 
-environment.play_episode(name, env,agent, debug = True)
+environment.play_episode(name, experiment, env,agent, debug = True)
 env.close()
 
 for i in range(0,len(agent.memory.frames)+1):
