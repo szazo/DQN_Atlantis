@@ -19,7 +19,9 @@ tf.config.threading.set_inter_op_parallelism_threads(8)
 
 name = 'Atlantis-v0'
 
-agent = the_agent.Agent(possible_actions=[0,1,2,3],starting_mem_len=100000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
+experiment = 'deepmind_resized'
+
+agent = the_agent.Agent(experiment,possible_actions=[0,1,2,3],starting_mem_len=100000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
 env = environment.make_env(name,agent)
 
 last_100_avg = [-21]
@@ -33,8 +35,6 @@ max_score = -21
 
 
 env.reset()
-
-experiment = 'all_actions_alpha_0_00025_deepmind'
 
 for i in range(1000000):
     timesteps = agent.total_timesteps

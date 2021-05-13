@@ -3,11 +3,11 @@ import preprocess_frame as ppf
 import numpy as np
 
 
-def initialize_new_game(name, env, agent):
+def initialize_new_game(name, experiment, env, agent):
     """We don't want an agents past game influencing its new game, so we add in some dummy data to initialize"""
     
     env.reset()
-    starting_frame = ppf.resize_frame(env.step(0)[0])
+    starting_frame = ppf.resize_frame(env.step(0)[0], experiment)
 
     dummy_action = 0
     dummy_reward = 0
@@ -31,7 +31,7 @@ def take_step(name, experiment, env, agent, score, debug):
     next_frame, next_frames_reward, next_frame_terminal, info = env.step(agent.memory.actions[-1])
     
     #4: Get next state
-    next_frame = ppf.resize_frame(next_frame)
+    next_frame = ppf.resize_frame(next_frame, experiment)
     new_state = [agent.memory.frames[-3], agent.memory.frames[-2], agent.memory.frames[-1], next_frame]
     new_state = np.moveaxis(new_state,0,2)/255 #We have to do this to get it into keras's goofy format of [batch_size,rows,columns,channels]
     new_state = np.expand_dims(new_state,0) #^^^
@@ -58,7 +58,7 @@ def take_step(name, experiment, env, agent, score, debug):
     return (score + next_frames_reward),False
 
 def play_episode(name, experiment, env, agent, debug = False):
-    initialize_new_game(name, env, agent)
+    initialize_new_game(name, experiment, env, agent)
     done = False
     score = 0
     while True:
