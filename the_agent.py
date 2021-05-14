@@ -1,5 +1,5 @@
-from tensorflow.keras.models import Sequential, clone_model
-from tensorflow.keras.layers import Dense, Flatten, Conv2D, Input, Dropout
+from tensorflow.keras.models import Sequential, clone_model, Model
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, Input, Dropout, concatenate
 from tensorflow.keras.optimizers import Adam
 import tensorflow.keras.backend as K
 import tensorflow as tf
@@ -26,41 +26,37 @@ class Agent():
 
 
     def _build_model(self):
-        model = Sequential()
-        if self.experiment == 'deepmind_resized':
-            model.add(Input((90,80,4)))
-            model.add(Conv2D(filters = 16,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
-            model.add(Conv2D(filters = 32,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
-            model.add(Flatten())
-            model.add(Dense(256,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-        elif self.experiment == 'all_actions_alpha_0_00025_deepmind':
-            model.add(Input((180,160,4)))
-            model.add(Conv2D(filters = 16,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
-            model.add(Conv2D(filters = 32,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
-            model.add(Flatten())
-            # model.add(Dense(512,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-            model.add(Dense(256,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-        else:
-            model.add(Conv2D(filters = 24,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-            model.add(Conv2D(filters = 36,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-            model.add(Conv2D(filters = 36,kernel_size = (3,3),strides = 1,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-            model.add(Flatten())
-            model.add(Dense(512,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2)))
-            # model.add(Dropout(0.2)) # Dropout layer, randomly drops 0.2 of the input values
-        model.add(Dense(len(self.possible_actions), activation = 'linear'))
+        image_input = Input((90, 80, 4))
+        image_network = Conv2D(filters = 16,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))(image_input)
+        image_network = Conv2D(filters = 32,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))(image_network)
+
+        image_network = Flatten()(image_network)
+        image_network = Dense(256,activation = 'relu', kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))(image_network)
+
+        image_model = Model(inputs=image_input, outputs=image_network)
+
+        action_input = Input((3))
+        action_network = Dense(32, activation="relu")(action_input)
+
+        action_model = Model(inputs=action_input, outputs=action_network)
+        combined = concatenate([image_model.output, action_model.output])
+
+        action_selection = Dense(len(self.possible_actions), activation = 'linear')(combined)
+
+        model = Model(inputs = [image_model.input, action_model.input], outputs = action_selection)
         optimizer = Adam(self.learn_rate)
         model.compile(optimizer, loss=tf.keras.losses.Huber())
         model.summary()
         print('\nAgent Initialized\n')
         return model
 
-    def get_action(self,state):
+    def get_action(self,state, previous_actions):
         """Explore"""
         if np.random.rand() < self.epsilon:
             return random.sample(self.possible_actions,1)[0]
 
         """Do Best Acton"""
-        a_index = np.argmax(self.model.predict(state))
+        a_index = np.argmax(self.model.predict([np.array(state), np.array(previous_actions)]))
         return self.possible_actions[a_index]
 
     def _index_valid(self,index):
@@ -75,7 +71,9 @@ class Agent():
 
         """First we need 32 random valid indicies"""
         states = []
+        states_previous_actions = []
         next_states = []
+        next_states_previous_actions = []
         actions_taken = []
         next_rewards = []
         next_done_flags = []
@@ -84,19 +82,24 @@ class Agent():
             index = np.random.randint(4,len(self.memory.frames) - 1)
             if self._index_valid(index):
                 state = [self.memory.frames[index-3], self.memory.frames[index-2], self.memory.frames[index-1], self.memory.frames[index]]
+                state_previous_actions = [self.memory.actions[index-3], self.memory.actions[index-2], self.memory.actions[index-1]]
                 state = np.moveaxis(state,0,2)/255
                 next_state = [self.memory.frames[index-2], self.memory.frames[index-1], self.memory.frames[index], self.memory.frames[index+1]]
                 next_state = np.moveaxis(next_state,0,2)/255
+                next_state_previous_actions = [self.memory.actions[index-2], self.memory.actions[index-1], self.memory.actions[index]]
 
                 states.append(state)
+                states_previous_actions.append(state_previous_actions)
                 next_states.append(next_state)
+                next_states_previous_actions.append(next_state_previous_actions)
+                #next_states_with_previous_actions = ([next_state, next_state_previous_actions])
                 actions_taken.append(self.memory.actions[index])
                 next_rewards.append(self.memory.rewards[index+1])
                 next_done_flags.append(self.memory.done_flags[index+1])
 
         """Now we get the ouputs from our model, and the target model. We need this for our target in the error function"""
-        labels = self.model.predict(np.array(states))
-        next_state_values = self.model_target.predict(np.array(next_states))
+        labels = self.model.predict([np.array(states), np.array(states_previous_actions)])
+        next_state_values = self.model_target.predict([np.array(next_states), np.array(next_states_previous_actions)])
         
         """Now we define our labels, or what the output should have been
            We want the output[action_taken] to be R_(t+1) + Qmax_(t+1) """
@@ -105,7 +108,7 @@ class Agent():
             labels[i][action] = next_rewards[i] + (not next_done_flags[i]) * self.gamma * max(next_state_values[i])
 
         """Train our model using the states and outputs generated"""
-        self.model.fit(np.array(states),labels,batch_size = 32, epochs = 1, verbose = 0)
+        self.model.fit([np.array(states), np.array(states_previous_actions)],labels,batch_size = 32, epochs = 1, verbose = 0)
 
         """Decrease epsilon and update how many times our agent has learned"""
         if self.epsilon > self.epsilon_min:

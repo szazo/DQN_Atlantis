@@ -37,7 +37,10 @@ def take_step(name, experiment, env, agent, score, debug):
     new_state = np.expand_dims(new_state,0) #^^^
     
     #5: Get next action, using next state (based on current epsilon)
-    next_action = agent.get_action(new_state)
+    previous_actions = [agent.memory.actions[-3], agent.memory.actions[-2], agent.memory.actions[-1]]
+    previous_actions = np.expand_dims(previous_actions, 0)
+    
+    next_action = agent.get_action(new_state, previous_actions)
 
     #6: If game is over, return the score
     if next_frame_terminal:

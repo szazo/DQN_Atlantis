@@ -7,7 +7,7 @@ import time
 from collections import deque
 import numpy as np
 
-GPU_ENABLED = False
+GPU_ENABLED = True
 if not GPU_ENABLED:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 else:
@@ -21,7 +21,7 @@ name = 'Atlantis-v0'
 
 experiment = 'deepmind_resized'
 
-agent = the_agent.Agent(experiment,possible_actions=[0,1,2,3],starting_mem_len=100000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
+agent = the_agent.Agent(experiment,possible_actions=[0,1,2,3],starting_mem_len=50000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
 env = environment.make_env(name,agent)
 
 last_100_avg = [-21]
