@@ -19,7 +19,7 @@ tf.config.threading.set_inter_op_parallelism_threads(8)
 
 name = 'Atlantis-v0'
 
-experiment = 'deepmind_resized'
+experiment = 'deepmind_resized_score_multiinput'
 
 agent = the_agent.Agent(experiment,possible_actions=[0,1,2,3],starting_mem_len=50000,max_mem_len=750000,starting_epsilon = 1, learn_rate = .00025)
 env = environment.make_env(name,agent)
