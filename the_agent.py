@@ -27,7 +27,7 @@ class Agent():
 
     def _build_model(self):
         model = Sequential()
-        if self.experiment == 'deepmind_resized':
+        if self.experiment == 'deepmind_resized' or self.experiment == 'deepmind_resized_score':
             model.add(Input((90,80,4)))
             model.add(Conv2D(filters = 16,kernel_size = (8,8),strides = 4,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind
             model.add(Conv2D(filters = 32,kernel_size = (4,4),strides = 2,data_format="channels_last", activation = 'relu',kernel_initializer = tf.keras.initializers.VarianceScaling(scale=2))) # DeepMind

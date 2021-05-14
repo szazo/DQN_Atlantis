@@ -29,6 +29,8 @@ def take_step(name, experiment, env, agent, score, debug):
 
     #3: Take action, the action is the last planned action for the last state
     next_frame, next_frames_reward, next_frame_terminal, info = env.step(agent.memory.actions[-1])
+    next_frames_reward = next_frames_reward / 100
+    #print(next_frames_reward)
     
     #4: Get next state
     next_frame = ppf.resize_frame(next_frame, experiment)
